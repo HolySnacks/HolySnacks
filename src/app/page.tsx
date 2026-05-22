@@ -2219,6 +2219,11 @@ function MobilePlanetScroller({ onSelectCategory, onBadPlanet, onGoodPlanet, lan
 
 function Planet({ cat, cx, total, onClick }: { cat: Category; cx: number; total: number; onClick: () => void }) {
   const d = cat.radius * 2;
+  // Encode startAngle via negative delay so the CSS animation doesn't override
+  // the inline transform (which it would — CSS animations always win at fill time).
+  // A negative delay of -(startAngle/360)*duration effectively fast-forwards the
+  // animation to the correct initial position.
+  const orbitDelay = `${-((cat.startAngle / 360) * cat.duration).toFixed(3)}s`;
   return (
     <div className="absolute left-1/2 top-1/2 pointer-events-none" style={{ marginLeft: -cx, marginTop: -cx }}>
       {/* Orbit ring — no pointer events */}
@@ -2230,11 +2235,11 @@ function Planet({ cat, cx, total, onClick }: { cat: Category; cx: number; total:
         width: d, height: d,
         left: cx - cat.radius, top: cx - cat.radius,
         animation: `orbit ${cat.duration}s linear infinite`,
-        transform: `rotate(${cat.startAngle}deg)`,
+        animationDelay: orbitDelay,
       }}>
         {/* Planet — pointer events re-enabled here only */}
         <div className="absolute left-1/2 flex flex-col items-center cursor-pointer group pointer-events-auto"
-          style={{ top: -cat.size / 2, animation: `counter-orbit ${cat.duration}s linear infinite` }}
+          style={{ top: -cat.size / 2, animation: `counter-orbit ${cat.duration}s linear infinite`, animationDelay: orbitDelay }}
           onClick={onClick}
         >
           <div className={`rounded-full bg-gradient-to-br ${cat.gradient} flex items-center justify-center select-none transition-all duration-300 group-hover:scale-110`}
@@ -2561,7 +2566,7 @@ function CategoryPage({ cat, lang, onBack, onAddToCart, onOpenDetail }: {
       </div>
 
       {/* Hero banner */}
-      <div className={`relative flex flex-col items-center justify-center py-16 px-6 text-center transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+      <div className={`relative flex flex-col items-center justify-center py-10 px-6 text-center transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
         {/* Planet visual large */}
         <div className={`w-32 h-32 rounded-full bg-gradient-to-br ${cat.gradient} flex items-center justify-center mb-6`}
           style={{ boxShadow: `0 0 60px 20px ${cat.glow}, inset 0 0 30px rgba(255,255,255,0.2)`, border: "2px solid rgba(255,255,255,0.3)" }}>
@@ -2602,7 +2607,7 @@ function CategoryPage({ cat, lang, onBack, onAddToCart, onOpenDetail }: {
       </div>
 
       {/* Products grid */}
-      <div className="max-w-5xl mx-auto px-6 pb-24 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="max-w-5xl mx-auto px-6 pb-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {cat.products.map((p, i) => {
           const isComingSoon = p.badge === "Coming Soon";
           return (
@@ -2651,6 +2656,29 @@ function CategoryPage({ cat, lang, onBack, onAddToCart, onOpenDetail }: {
             </div>
           );
         })}
+      </div>
+
+      {/* Explore other planets footer strip */}
+      <div className="max-w-5xl mx-auto px-6 pb-10">
+        <div className="rounded-2xl px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-4"
+          style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${cat.accentColor}18` }}>
+          <div>
+            <p className="text-[10px] font-bold tracking-[0.25em] uppercase opacity-50 mb-1"
+              style={{ color: cat.accentColor }}>✦ Explore the Universe</p>
+            <p className="text-sm text-white/50">{lang === "en" ? "Discover all 6 clean-food planets" : "Atrask visas 6 švarios mitybos planetas"}</p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end">
+            {CATEGORIES.filter(c => c.id !== cat.id).slice(0, 5).map(c => (
+              <button key={c.id}
+                onClick={onBack}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all hover:scale-105"
+                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.55)" }}>
+                <span>{c.icon}</span>
+                <span className="hidden sm:inline">{lang === "lt" ? c.labelLt : c.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -5171,7 +5199,7 @@ function IngredientScannerSection({ lang, user, onScanComplete }: {
                         { emoji: "✨", name: "Golden Elixir", desc: lang === "en" ? "Turmeric, ginger & black pepper. Anti-inflammatory." : "Ciberžolė, imbieras ir pipirai. Priešuždegiminė gėrimė.", badge: "New" },
                         { emoji: "🫐", name: "Berry Bliss", desc: lang === "en" ? "Pure fruit gummies. Nothing else." : "Grynų vaisių gumos. Nieko daugiau.", badge: null },
                       ].map((p) => (
-                        <a key={p.name} href="/products"
+                        <a key={p.name} href="/#solar"
                           className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all hover:scale-[1.01] group"
                           style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
                           <span className="text-xl flex-shrink-0">{p.emoji}</span>
@@ -5189,7 +5217,7 @@ function IngredientScannerSection({ lang, user, onScanComplete }: {
                         </a>
                       ))}
                     </div>
-                    <a href="/products"
+                    <a href="/#solar"
                       className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.01]"
                       style={{ background: "rgba(240,200,85,0.12)", border: "1px solid rgba(240,200,85,0.25)", color: "#f0c855" }}>
                       {lang === "en" ? "Browse all clean products →" : "Peržiūrėti visus švaruis produktus →"}
@@ -5245,12 +5273,13 @@ function ProductReviews({ lang, productName }: { lang: "en" | "lt"; productName:
       setLoading(true);
       try {
         const supabase = createClient();
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("product_reviews")
           .select("id, rating, comment, created_at, profiles(display_name, avatar_url)")
           .ilike("product_name", productName)
           .order("created_at", { ascending: false })
           .limit(10);
+        if (error) { setLoading(false); return; }
         setReviews((data as Review[]) ?? []);
       } catch { /* silent */ }
       setLoading(false);
@@ -5455,9 +5484,23 @@ function LeaderboardSection({ lang, currentUserId }: { lang: "en" | "lt"; curren
             <div className="w-8 h-8 rounded-full border-2 border-[#f0c855]/30 border-t-[#f0c855] animate-spin" />
           </div>
         ) : leaders.length === 0 ? (
-          <p className="text-center text-white/30 py-12">
-            {lang === "en" ? "No entries yet — be the first to scan!" : "Dar nėra įrašų — nuskanuokite pirmieji!"}
-          </p>
+          <div className="flex flex-col items-center gap-4 py-14 rounded-2xl"
+            style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.08)" }}>
+            <span className="text-5xl opacity-60">🏆</span>
+            <p className="text-white/55 font-semibold text-lg text-center">
+              {lang === "en" ? "No entries yet" : "Dar nėra įrašų"}
+            </p>
+            <p className="text-white/30 text-sm text-center max-w-xs">
+              {lang === "en"
+                ? "Be the first to reach the top — scan a product and earn your first XP."
+                : "Tapk pirmuoju — nuskaituok produktą ir uždirbk pirmąjį XP."}
+            </p>
+            <a href="#scanner"
+              className="mt-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:scale-105"
+              style={{ background: "rgba(240,200,85,0.12)", border: "1px solid rgba(240,200,85,0.25)", color: "#f0c855" }}>
+              {lang === "en" ? "Scan now →" : "Skenuoti dabar →"}
+            </a>
+          </div>
         ) : (
           <div className="flex flex-col gap-3">
             {leaders.map((entry, i) => {
@@ -5889,7 +5932,7 @@ function ProductQuizSection({ lang, onSelectCategory }: { lang: "en" | "lt"; onS
 // ─── NEWSLETTER SECTION ───────────────────────────────────────────────────────
 
 function NewsletterSection({ lang }: { lang: "en" | "lt" }) {
-  const anim = useInView();
+  const anim = useInView(0.05);
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
 
@@ -5913,8 +5956,8 @@ function NewsletterSection({ lang }: { lang: "en" | "lt" }) {
   }
 
   return (
-    <section className="px-6 py-24 max-w-2xl mx-auto text-center">
-      <div ref={anim.ref} className={`transition-all duration-700 ${anim.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+    <section className="px-6 py-16 max-w-2xl mx-auto text-center">
+      <div ref={anim.ref} className={`transition-all duration-700 ${anim.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
         <span className="text-[#f0c855]/60 text-xs tracking-widest uppercase mb-4 block">✦ ✦ ✦</span>
         <h2 className="font-[var(--font-playfair)] text-4xl md:text-5xl font-bold mb-4">{t.title}</h2>
         <p className="text-white/55 text-lg mb-10">{t.sub}</p>
@@ -6779,7 +6822,6 @@ export default function Home() {
   }
 
   const missionAnim = useInView();
-  const newsletterAnim = useInView();
 
   // Cart helpers
   function addToCart(product: Product, cat: Category) {
@@ -6872,7 +6914,7 @@ export default function Home() {
           <HolyLogo />
           <div className="hidden md:flex items-center gap-8 text-sm text-white/50">
             <a href="#solar" className="hover:text-[#f0c855] transition-colors">{t.nav.products}</a>
-            <a href="#mission" className="hover:text-[#f0c855] transition-colors">{t.nav.about}</a>
+            <a href="/about" className="hover:text-[#f0c855] transition-colors">{t.nav.about}</a>
             <a href="#mission" className="hover:text-[#f0c855] transition-colors">{t.nav.mission}</a>
           </div>
           <div className="flex items-center gap-3">
@@ -6944,7 +6986,7 @@ export default function Home() {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-[#f0c855]/10 bg-[#0d1525] px-6 py-4 flex flex-col gap-4">
             <a href="#solar" onClick={() => setMobileMenuOpen(false)} className="text-white/60 hover:text-[#f0c855] py-2">{t.nav.products}</a>
-            <a href="#mission" onClick={() => setMobileMenuOpen(false)} className="text-white/60 hover:text-[#f0c855] py-2">{t.nav.about}</a>
+            <a href="/about" onClick={() => setMobileMenuOpen(false)} className="text-white/60 hover:text-[#f0c855] py-2">{t.nav.about}</a>
             <button onClick={() => { setShopOpen(true); setMobileMenuOpen(false); }} className="mt-2 py-3 rounded-full text-[#0b1220] font-bold text-sm" style={{ background: "linear-gradient(to right, #d4a830, #fad55c)" }}>{t.nav.shop}</button>
           </div>
         )}
