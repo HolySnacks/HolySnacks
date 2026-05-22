@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0b1220;
+  --foreground: #f0eee8;
 }
 
 @theme inline {
@@ -12,15 +16,112 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(1deg); }
+}
+
+@keyframes orbit {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes counter-orbit {
+  from { transform: translateX(-50%) rotate(0deg); }
+  to   { transform: translateX(-50%) rotate(-360deg); }
+}
+
+@keyframes halo-pulse {
+  0%, 100% { opacity: 0.75; transform: scaleX(1); }
+  50% { opacity: 1; transform: scaleX(1.06); }
+}
+
+@keyframes divine-glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.animate-float { animation: float 5s ease-in-out infinite; }
+.animate-halo { animation: halo-pulse 2.5s ease-in-out infinite; }
+.animate-divine { animation: divine-glow 3s ease-in-out infinite; }
+.animate-marquee { animation: marquee 30s linear infinite; }
+
+@keyframes twinkle {
+  0%, 100% { opacity: var(--star-min, 0.08); transform: scale(1); }
+  50%       { opacity: var(--star-max, 0.75); transform: scale(1.6); }
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0); }
+  33%       { transform: translate(3px, -4px); }
+  66%       { transform: translate(-2px, 3px); }
+}
+
+@keyframes shooting-star {
+  0%   { transform: translateX(0)    translateY(0)    scaleX(0); opacity: 0; }
+  3%   { transform: translateX(8px)  translateY(8px)  scaleX(1); opacity: 1; }
+  18%  { transform: translateX(180px) translateY(180px) scaleX(1); opacity: 0.7; }
+  22%  { transform: translateX(220px) translateY(220px) scaleX(0); opacity: 0; }
+  100% { transform: translateX(220px) translateY(220px) scaleX(0); opacity: 0; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scan-line {
+  0%   { top: 0%; }
+  100% { top: 100%; }
+}
+
+.animate-twinkle  { animation: twinkle var(--dur, 3s) ease-in-out infinite var(--delay, 0s); }
+.animate-drift    { animation: drift var(--dur, 8s) ease-in-out infinite var(--delay, 0s); }
+.animate-fade-in-up { animation: fade-in-up 0.6s ease-out both; }
+.animate-scan     { animation: scan-line 2s linear infinite; }
+
+/* ── Comets ─────────────────────────────────────────────────────────────── */
+@keyframes comet-bad-drift {
+  0%, 100% { transform: translate(0px, 0px); }
+  50%       { transform: translate(-52px, 52px); }
+}
+@keyframes comet-good-drift {
+  0%, 100% { transform: translate(0px, 0px); }
+  50%       { transform: translate(52px, 52px); }
+}
+@keyframes comet-nucleus-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.08); }
+}
+@keyframes spark-bad {
+  0%   { opacity: 0.95; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0;    transform: translate(var(--fx, 18px), var(--fy, -18px)) scale(0); }
+}
+@keyframes spark-good {
+  0%   { opacity: 0.95; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0;    transform: translate(var(--fx, -18px), var(--fy, -18px)) scale(0); }
+}
+@keyframes comet-banner-pulse {
+  0%, 100% { box-shadow: 0 0 18px rgba(220,38,38,0.25); }
+  50%       { box-shadow: 0 0 32px rgba(220,38,38,0.5); }
+}
+@keyframes comet-banner-pulse-good {
+  0%, 100% { box-shadow: 0 0 18px rgba(34,197,94,0.25); }
+  50%       { box-shadow: 0 0 32px rgba(34,197,94,0.5); }
 }

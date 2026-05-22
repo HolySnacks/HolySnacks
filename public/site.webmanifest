@@ -1,0 +1,12 @@
+{
+  "name": "HolySnacks",
+  "short_name": "HolySnacks",
+  "description": "Snack Holy. Live Wholly. — Premium natural & organic snacks.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#f0c855",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
