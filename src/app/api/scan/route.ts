@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkScanLimit } from "@/lib/ratelimit";
 
 export const runtime = "edge";
 
@@ -88,6 +89,12 @@ function saveCache(key: string, data: {
 }
 
 export async function GET(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const { allowed } = await checkScanLimit(ip);
+  if (!allowed) {
+    return NextResponse.json({ found: false, error: "Too many requests" }, { status: 429 });
+  }
+
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q")?.trim();
   if (!q) return NextResponse.json({ found: false, error: "No query" }, { status: 400 });

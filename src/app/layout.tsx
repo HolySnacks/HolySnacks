@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { Playfair_Display } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
@@ -85,6 +86,12 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-[#0b1220] text-[#f5f0eb]">
         {children}
         <PWAInstallPrompt />
+        <Script
+          defer
+          data-domain="holysnacks.com"
+          src="https://plausible.io/js/script.tagged-events.js"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );

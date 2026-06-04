@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { checkWriteLimit } from "@/lib/ratelimit";
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const { allowed } = await checkWriteLimit(ip);
+  if (!allowed) return NextResponse.json({ ok: false, error: "Too many requests" }, { status: 429 });
+
   try {
     const { query, brand, ingredients, userId } = await req.json();
     if (!query?.trim() || !ingredients?.trim()) {
