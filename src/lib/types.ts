@@ -37,33 +37,3 @@ export type CartItem = {
   cat: Category;
   quantity: number;
 };
-
-export type BadIngredient = {
-  name: string;
-  emoji: string;
-  danger: "high" | "medium" | "low";
-  category: string;
-  why: string;
-  alsoKnownAs?: string;
-  eNumber?: string;
-  points?: number;
-};
-
-export type GoodIngredient = {
-  name: string;
-  emoji: string;
-  category: string;
-  benefit: string;
-  aliases: string[];
-  bonus: number;
-};
-
-export type ScanResult = {
-  ingredient: BadIngredient;
-  matched: string;
-};
-
-export type GoodResult = {
-  ingredient: GoodIngredient;
-  matched: string;
-};
