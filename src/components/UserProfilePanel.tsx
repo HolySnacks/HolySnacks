@@ -1,8 +1,18 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { createClient, getLevelInfo, LEVELS } from "@/lib/supabase";
 import type { Profile, ScanRecord } from "@/lib/supabase";
 import { getGrade } from "@/lib/scanner";
+
+type AchievementEntry = {
+  key: string;
+  title: string;
+  emoji: string;
+  description: string;
+  unlocked: boolean;
+  unlockedAt: string | null;
+};
 
 export function UserProfilePanel({ profile, recentScans, lang, onClose, onSignOut }: {
   profile: Profile;
@@ -12,6 +22,17 @@ export function UserProfilePanel({ profile, recentScans, lang, onClose, onSignOu
   onSignOut: () => void;
 }) {
   const { current, next, progress, xpIntoLevel, xpNeeded } = getLevelInfo(profile.xp);
+  const [achievements, setAchievements] = useState<AchievementEntry[]>([]);
+
+  useEffect(() => {
+    fetch(`/api/achievements?userId=${profile.id}`)
+      .then(r => r.json())
+      .then(d => setAchievements(d.achievements ?? []))
+      .catch(() => {});
+  }, [profile.id]);
+
+  const unlockedBadges = achievements.filter(a => a.unlocked);
+  const lockedBadges   = achievements.filter(a => !a.unlocked);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
@@ -88,6 +109,31 @@ export function UserProfilePanel({ profile, recentScans, lang, onClose, onSignOu
               </div>
             ))}
           </div>
+
+          {/* Achievements / Badges */}
+          {achievements.length > 0 && (
+            <div>
+              <div className="text-[10px] font-bold tracking-widest uppercase text-white/20 mb-3">
+                {lang === "en" ? "Badges" : "Ženkleliai"} {unlockedBadges.length > 0 && <span className="text-[#f0c855]/50">({unlockedBadges.length}/{achievements.length})</span>}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[...unlockedBadges, ...lockedBadges].map((a) => (
+                  <div key={a.key}
+                    title={a.description}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all"
+                    style={{
+                      background: a.unlocked ? "rgba(240,200,85,0.12)" : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${a.unlocked ? "rgba(240,200,85,0.35)" : "rgba(255,255,255,0.07)"}`,
+                      color: a.unlocked ? "#f0c855" : "rgba(255,255,255,0.2)",
+                      opacity: a.unlocked ? 1 : 0.55,
+                    }}>
+                    <span className="text-sm">{a.emoji}</span>
+                    <span>{a.title}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* All levels overview */}
           <div>
