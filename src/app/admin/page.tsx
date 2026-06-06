@@ -51,7 +51,8 @@ export default function AdminPage() {
   const [submissions, setSubmissions] = useState<UserSubmission[]>([]);
   const [subscriberCount, setSubscriberCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  const [approving, setApproving] = useState<string | null>(null);
+  const [approving, setApproving]   = useState<string | null>(null);
+  const [resolving, setResolving]   = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -90,6 +91,14 @@ export default function AdminPage() {
     setSubmissions(submissionsRes.data ?? []);
     setSubscriberCount(countRes.count ?? 0);
     setLoading(false);
+  }
+
+  async function resolveMissedSearch(m: MissedSearch) {
+    setResolving(m.id);
+    const supabase = createClient();
+    await supabase.from("missed_searches").update({ status: "resolved" }).eq("id", m.id);
+    setMissed(prev => prev.filter(r => r.id !== m.id));
+    setResolving(null);
   }
 
   async function approveSubmission(sub: UserSubmission) {
@@ -210,6 +219,13 @@ export default function AdminPage() {
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <span className="text-sm text-[#f5f0eb]/60">{m.search_count}×</span>
                     <StatusBadge status={m.status ?? m.research_status} />
+                    <button
+                      onClick={() => resolveMissedSearch(m)}
+                      disabled={resolving === m.id}
+                      className="px-2.5 py-1 bg-white/8 text-[#f5f0eb]/50 rounded-lg text-xs font-medium hover:bg-white/15 hover:text-[#f5f0eb] transition-colors disabled:opacity-30"
+                    >
+                      {resolving === m.id ? "…" : "✓ Resolve"}
+                    </button>
                   </div>
                 </div>
               ))}

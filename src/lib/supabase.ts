@@ -1,10 +1,58 @@
 import { createBrowserClient } from "@supabase/ssr";
+import type { Category, Product, KeyIngredient } from "./types";
 
 export function createClient() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+}
+
+/** Fetch the full product catalog from Supabase and reconstruct Category[].
+ *  Returns an empty array if the DB is empty or unreachable. */
+export async function getCategories(): Promise<Category[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("categories")
+    .select("*, products(*), category_key_ingredients(*)")
+    .eq("is_active", true)
+    .order("sort_order");
+
+  if (!data || data.length === 0) return [];
+
+  return data.map((c: Record<string, unknown>) => ({
+    id:          c.id as string,
+    radius:      c.radius as number,
+    duration:    c.duration as number,
+    size:        c.size as number,
+    startAngle:  c.start_angle as number,
+    icon:        c.icon as string,
+    label:       c.label as string,
+    labelLt:     c.label_lt as string,
+    gradient:    c.gradient as string,
+    glow:        c.glow as string,
+    ring:        c.ring as string,
+    bgFrom:      c.bg_from as string,
+    accentColor: c.accent_color as string,
+    products: ((c.products as Record<string, unknown>[]) ?? [])
+      .sort((a, b) => (a.sort_order as number) - (b.sort_order as number))
+      .map((p): Product => ({
+        name:     p.name as string,
+        flavor:   p.flavor as string,
+        price:    p.price as string,
+        emoji:    p.emoji as string,
+        badge:    (p.badge as string | null) ?? undefined,
+        desc:     p.description as string,
+        gradient: p.gradient as string,
+      })),
+    keyIngredients: ((c.category_key_ingredients as Record<string, unknown>[]) ?? [])
+      .sort((a, b) => (a.sort_order as number) - (b.sort_order as number))
+      .map((ki): KeyIngredient => ({
+        emoji:   ki.emoji as string,
+        name:    ki.name as string,
+        benefit: ki.benefit as string,
+      })),
+  }));
 }
 
 export type Profile = {

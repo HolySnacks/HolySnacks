@@ -131,6 +131,19 @@ export default function Home() {
       total_scans: (p.total_scans ?? 0) + 1,
     }).eq("id", user.id);
 
+    // Fire achievements check in background — results appear in UserProfilePanel on next open
+    void fetch("/api/achievements", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: user.id,
+        totalScans: (p.total_scans ?? 0) + 1,
+        streakDays: newStreak,
+        latestScore: score,
+        badDetectedCount: 0,
+      }),
+    });
+
     await loadProfile(user.id);
     setXpToast({ xp: xpEarned, label: leveledUp ? `Level up! ${newLevel.emoji} ${newLevel.title}` : "" });
     setTimeout(() => setXpToast(null), 3500);

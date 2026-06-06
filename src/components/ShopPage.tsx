@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Category, Product } from "@/lib/types";
 import { CATEGORIES } from "@/lib/products";
+import { getCategories } from "@/lib/supabase";
 import { HolyLogo } from "./HolyLogo";
 
 export function ShopPage({ lang, onBack, onOpenCat, onAddToCart, onOpenDetail }: {
@@ -10,11 +11,17 @@ export function ShopPage({ lang, onBack, onOpenCat, onAddToCart, onOpenDetail }:
   onAddToCart: (p: Product, c: Category) => void;
   onOpenDetail: (p: Product, c: Category) => void;
 }) {
+  const [categories, setCategories] = useState<Category[]>(CATEGORIES);
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [visible, setVisible] = useState(false);
-  useEffect(() => { setTimeout(() => setVisible(true), 50); }, []);
 
-  const allProducts = CATEGORIES.flatMap(cat =>
+  useEffect(() => {
+    setTimeout(() => setVisible(true), 50);
+    // Try to load live catalog from Supabase; fall back to static CATEGORIES if empty/error
+    getCategories().then(live => { if (live.length > 0) setCategories(live); }).catch(() => {});
+  }, []);
+
+  const allProducts = categories.flatMap(cat =>
     cat.products.map(p => ({ ...p, cat }))
   );
 
@@ -24,7 +31,7 @@ export function ShopPage({ lang, onBack, onOpenCat, onAddToCart, onOpenDetail }:
 
   const filters = [
     { id: "all", label: lang === "en" ? "All Products" : "Visi produktai", icon: "✦" },
-    ...CATEGORIES.map(c => ({ id: c.id, label: lang === "lt" ? c.labelLt : c.label, icon: c.icon })),
+    ...categories.map(c => ({ id: c.id, label: lang === "lt" ? c.labelLt : c.label, icon: c.icon })),
   ];
 
   return (
@@ -63,7 +70,7 @@ export function ShopPage({ lang, onBack, onOpenCat, onAddToCart, onOpenDetail }:
 
         {/* Planet quick links */}
         <div className="flex flex-wrap justify-center gap-3 mt-8">
-          {CATEGORIES.map(cat => (
+          {categories.map(cat => (
             <button key={cat.id} onClick={() => onOpenCat(cat)}
               className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all hover:scale-105"
               style={{ background: `${cat.glow}`, border: `1px solid ${cat.accentColor}50`, color: cat.accentColor }}>

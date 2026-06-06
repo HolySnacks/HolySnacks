@@ -9,18 +9,15 @@ interface BeforeInstallPromptEvent extends Event {
 
 export default function PWAInstallPrompt() {
   const [show, setShow] = useState(false);
+  const [notifState, setNotifState] = useState<"idle" | "loading" | "granted" | "denied">("idle");
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
-    // Register service worker
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
 
-    // Already installed (standalone mode)
     if (window.matchMedia("(display-mode: standalone)").matches) return;
-
-    // Already dismissed by the user
     if (localStorage.getItem("pwa-dismissed") === "1") return;
 
     const handler = (e: Event) => {
@@ -50,7 +47,41 @@ export default function PWAInstallPrompt() {
     setShow(false);
   }
 
+  async function handleEnableNotifications() {
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
+    setNotifState("loading");
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      setNotifState("denied");
+      return;
+    }
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!vapidKey) { setNotifState("granted"); return; }
+
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey),
+      });
+      await fetch("/api/push/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sub),
+      });
+      setNotifState("granted");
+    } catch {
+      setNotifState("granted");
+    }
+  }
+
   if (!show) return null;
+
+  const showNotifButton =
+    typeof window !== "undefined" &&
+    "Notification" in window &&
+    Notification.permission === "default" &&
+    notifState !== "granted";
 
   return (
     <div
@@ -67,7 +98,6 @@ export default function PWAInstallPrompt() {
       `}</style>
 
       <div className="flex items-start gap-3">
-        {/* Icon */}
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-pink-500 text-2xl font-black text-white shadow-lg">
           H
         </div>
@@ -81,7 +111,6 @@ export default function PWAInstallPrompt() {
           </p>
         </div>
 
-        {/* Close */}
         <button
           onClick={handleDismiss}
           aria-label="Dismiss"
@@ -91,12 +120,39 @@ export default function PWAInstallPrompt() {
         </button>
       </div>
 
-      <button
-        onClick={handleInstall}
-        className="mt-3 w-full rounded-xl bg-[#f0c855] py-2.5 text-sm font-semibold text-[#0b1220] hover:bg-[#f5d570] active:scale-95 transition-all"
-      >
-        Download app
-      </button>
+      <div className="mt-3 flex flex-col gap-2">
+        <button
+          onClick={handleInstall}
+          className="w-full rounded-xl bg-[#f0c855] py-2.5 text-sm font-semibold text-[#0b1220] hover:bg-[#f5d570] active:scale-95 transition-all"
+        >
+          Download app
+        </button>
+
+        {showNotifButton && (
+          <button
+            onClick={handleEnableNotifications}
+            disabled={notifState === "loading"}
+            className="w-full rounded-xl py-2 text-xs font-medium text-[#f5f0eb]/50 hover:text-[#f5f0eb]/80 border border-white/10 hover:border-white/25 transition-all disabled:opacity-40"
+          >
+            {notifState === "loading" ? "…" : "🔔 Enable streak reminders"}
+          </button>
+        )}
+        {notifState === "granted" && (
+          <p className="text-center text-xs text-green-400/80">🔔 Notifications enabled!</p>
+        )}
+        {notifState === "denied" && (
+          <p className="text-center text-xs text-[#f5f0eb]/30">Notifications blocked in browser settings.</p>
+        )}
+      </div>
     </div>
   );
+}
+
+function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  const arr = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; i++) arr[i] = rawData.charCodeAt(i);
+  return arr.buffer as ArrayBuffer;
 }
