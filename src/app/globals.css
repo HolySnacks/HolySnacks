@@ -105,6 +105,15 @@ body {
   0%, 100% { transform: translate(0px, 0px); }
   50%       { transform: translate(52px, 52px); }
 }
+/* Compact drift for the mobile solar system (smaller field) */
+@keyframes comet-bad-drift-sm {
+  0%, 100% { transform: translate(0px, 0px); }
+  50%       { transform: translate(-20px, 20px); }
+}
+@keyframes comet-good-drift-sm {
+  0%, 100% { transform: translate(0px, 0px); }
+  50%       { transform: translate(20px, 20px); }
+}
 @keyframes comet-nucleus-pulse {
   0%, 100% { transform: scale(1); }
   50%       { transform: scale(1.08); }

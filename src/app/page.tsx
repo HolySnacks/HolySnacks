@@ -10,7 +10,7 @@ import type { Category, Product, CartItem } from "@/lib/types";
 
 import { HolyLogo } from "@/components/HolyLogo";
 import { SolarSystem } from "@/components/SolarSystem";
-import { MobilePlanetScroller } from "@/components/MobilePlanetScroller";
+import { MobileSolarSystem } from "@/components/MobileSolarSystem";
 import { AuthModal } from "@/components/AuthModal";
 import { UserProfilePanel } from "@/components/UserProfilePanel";
 import { CartDrawer } from "@/components/CartDrawer";
@@ -415,9 +415,9 @@ export default function Home() {
             <SolarSystem onSelectCategory={setSelectedCat} onBadPlanet={() => setBadPlanetOpen(true)} onGoodPlanet={() => setGoodPlanetOpen(true)} hint={t.clickHint} />
           </div>
 
-          {/* Mobile planet swiper — replaces scaled solar system */}
+          {/* Mobile orbital solar system — planets orbit just like desktop */}
           <div className="lg:hidden w-full">
-            <MobilePlanetScroller
+            <MobileSolarSystem
               onSelectCategory={setSelectedCat}
               onBadPlanet={() => setBadPlanetOpen(true)}
               onGoodPlanet={() => setGoodPlanetOpen(true)}

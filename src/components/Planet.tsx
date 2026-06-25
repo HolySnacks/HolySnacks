@@ -2,7 +2,7 @@
 
 import { Category } from "@/lib/types";
 
-export function Planet({ cat, cx, total, onClick }: { cat: Category; cx: number; total: number; onClick: () => void }) {
+export function Planet({ cat, cx, total, onClick, label, labelClassName }: { cat: Category; cx: number; total: number; onClick: () => void; label?: string; labelClassName?: string }) {
   const d = cat.radius * 2;
   // Encode startAngle via negative delay so the CSS animation doesn't override
   // the inline transform (which it would — CSS animations always win at fill time).
@@ -36,9 +36,9 @@ export function Planet({ cat, cx, total, onClick }: { cat: Category; cx: number;
           >
             <span style={{ fontSize: cat.size * 0.38 }}>{cat.icon}</span>
           </div>
-          <span className="mt-2 text-xs font-semibold tracking-widest uppercase whitespace-nowrap"
+          <span className={labelClassName ?? "mt-2 text-xs font-semibold tracking-widest uppercase whitespace-nowrap"}
             style={{ color: cat.accentColor }}>
-            {cat.label}
+            {label ?? cat.label}
           </span>
         </div>
       </div>
